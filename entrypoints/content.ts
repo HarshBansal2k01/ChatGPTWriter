@@ -9,23 +9,24 @@ export default defineContentScript({
   matches: ["*://*.linkedin.com/*"],
   main() {
     const modalHtml = `
-    <div id="custom-modal" style="position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); display: none; justify-content: center; align-items: center; z-index: 4000;">
-      <div id="modal-content" style="background: #F9FAFB; border-radius: 8px; width: 100%; max-width: 570px; padding: 20px; box-shadow: 0px 4px 6px -1px #0000001A, 0px 2px 4px -2px #0000001A;">
-        <div id="messages" style="margin-top: 10px; max-height: 200px; overflow-y: auto; padding: 10px; display: flex; flex-direction: column;"></div>
-        <div style="margin-bottom: 10px;">
-          <input id="input-text" type="text" placeholder="Enter your prompt..." style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-shadow: 0px 2px 4px 0px #0000000F inset;"/>
+    <div id="custom-modal" style="position: fixed; inset: 0; background: rgba(0, 0, 0, 0.4); display: none; justify-content: center; align-items: center; z-index: 4000;">
+        <div id="modal-content" style="background: #EAECEE; border-radius: 8px; width: 100%; max-width: 570px; padding: 10px; box-shadow: 0px 4px 6px -1px #0000001A, 0px 2px 4px -2px #0000001A; margin-top: 10px;"> <!-- Adjusted margin-top here -->
+            <div id="messages" style="margin-top: 0; max-height: 200px; overflow-y: auto; padding: 10px; display: flex; flex-direction: column;"></div>
+            <div style="margin-bottom: 0; margin-top: -10px;"> 
+                <input id="input-text" type="text" placeholder="Your prompt" style="width: 100%; height: 40px; padding: 12px; background: #FFFFFF; border: 1px solid #ccc; border-radius: 4px; box-shadow: 0px 2px 4px 0px #0000000F inset;"/>
+            </div>
+
+            <div style="text-align: right; margin-bottom: 5px;">
+                <button id="insert-btn" style="display: none; cursor: pointer; margin-right: 10px;">
+                    <img src="${insertIcon}" alt="Insert" style="vertical-align: middle; margin-right: 2px; width: 90px; height: 35px; margin-top: 10px">
+                </button>
+                <button id="generate-btn" style="cursor: pointer;">
+                    <img src="${generateIcon}" alt="Generate" style="vertical-align: middle; width: 120px; height: 50px;">
+                </button>
+            </div>    
         </div>
-        <div style="text-align: right; margin-top: 12px;">
-          <button id="insert-btn" style="display: none; cursor: pointer; margin-right: 10px;">
-            <img src="${insertIcon}" alt="Insert" style="vertical-align: middle; margin-right: 5px; width: 70px; height: 50px;">
-          </button>
-          <button id="generate-btn" style="cursor: pointer;">
-            <img src="${generateIcon}" alt="Generate" style="vertical-align: middle; margin-right: 5px; width: 100px; height: 50px;">
-          </button>
-        </div>
-      </div>
     </div>
-    `;
+`;
 
     // Append modal to document body
     document.body.insertAdjacentHTML("beforeend", modalHtml);
@@ -118,7 +119,7 @@ export default defineContentScript({
         color: "#666D80",
         borderRadius: "12px",
         padding: "10px",
-        marginBottom: "5px",
+        marginBottom: "15px",
         textAlign: "right",
         maxWidth: "80%",
         alignSelf: "flex-end",
@@ -138,7 +139,7 @@ export default defineContentScript({
           color: "#666D80",
           borderRadius: "12px",
           padding: "10px",
-          marginBottom: "5px",
+          marginBottom: "15px",
           textAlign: "left",
           maxWidth: "80%",
           alignSelf: "flex-start",
@@ -148,7 +149,7 @@ export default defineContentScript({
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
         generateBtn.disabled = false;
-        generateBtn.innerHTML = `<img src="${regenerateIcon}" alt="Regenerate" style="vertical-align: middle; margin-right: 5px; width: 110px; height: 60px;">`;
+        generateBtn.innerHTML = `<img src="${regenerateIcon}" alt="Regenerate" style="vertical-align: middle;margin-top:10px">`;
         inputText.value = "";
         insertBtn.style.display = "inline-block"; // Show the insert button after generation
       }, 500);
@@ -171,7 +172,6 @@ export default defineContentScript({
         }
 
         existingParagraph.textContent = lastGeneratedMessage;
-        insertBtn.style.display = "none"; // Hide insert button after inserting the message
         modal.style.display = "none";
       } else {
         console.warn("No generated message or parent element is missing.");
