@@ -1,16 +1,14 @@
-// Import the necessary icon
 import editIcon from "../assets/editIcon.svg";
 import insertIcon from "../assets/insertIcon.svg";
 import generateIcon from "../assets/Generate.svg";
 import regenerateIcon from "../assets/RegenerateIcon.svg";
 
-// Main content script definition
 export default defineContentScript({
   matches: ["*://*.linkedin.com/*"],
   main() {
     const modalHtml = `
     <div id="custom-modal" style="position: fixed; inset: 0; background: rgba(0, 0, 0, 0.4); display: none; justify-content: center; align-items: center; z-index: 4000;">
-        <div id="modal-content" style="background: #EAECEE; border-radius: 8px; width: 100%; max-width: 570px; padding: 10px; box-shadow: 0px 4px 6px -1px #0000001A, 0px 2px 4px -2px #0000001A; margin-top: 10px;"> <!-- Adjusted margin-top here -->
+        <div id="modal-content" style="background: #EAECEE; border-radius: 8px; width: 100%; max-width: 570px; padding: 10px; box-shadow: 0px 4px 6px -1px #0000001A, 0px 2px 4px -2px #0000001A; margin-top: 10px;">
             <div id="messages" style="margin-top: 0; max-height: 200px; overflow-y: auto; padding: 10px; display: flex; flex-direction: column;"></div>
             <div style="margin-bottom: 0; margin-top: -10px;"> 
                 <input id="input-text" type="text" placeholder="Your prompt" style="width: 100%; height: 40px; padding: 12px; background: #FFFFFF; border: 1px solid #ccc; border-radius: 4px; box-shadow: 0px 2px 4px 0px #0000000F inset;"/>
@@ -45,6 +43,7 @@ export default defineContentScript({
     // Store the last generated message
     let lastGeneratedMessage = "";
     let parentElement: HTMLElement | null = null;
+    let editIconElement: HTMLImageElement | null = null;
 
     // Detect clicks on LinkedIn message input areas
     document.addEventListener("click", (event: MouseEvent) => {
@@ -60,7 +59,6 @@ export default defineContentScript({
           target.closest(".msg-form__contenteditable");
 
         if (parentElement) {
-          // Ensure message input area gets focused
           const contentContainer = parentElement.closest(
             ".msg-form_msg-content-container"
           );
@@ -73,25 +71,33 @@ export default defineContentScript({
 
           // Inject edit icon if not already present
           if (!parentElement.querySelector(".edit-icon")) {
-            const icon = document.createElement("img");
-            icon.className = "edit-icon";
-            icon.src = editIcon;
-            icon.alt = "Custom Icon";
-            icon.style.position = "absolute";
-            icon.style.bottom = "5px";
-            icon.style.right = "5px";
-            icon.style.width = "30px";
-            icon.style.height = "30px";
-            icon.style.cursor = "pointer";
-            icon.style.zIndex = "1000";
-            parentElement.appendChild(icon);
+            editIconElement = document.createElement("img");
+            editIconElement.className = "edit-icon";
+            editIconElement.src = editIcon;
+            editIconElement.alt = "Custom Icon";
+            editIconElement.style.position = "absolute";
+            editIconElement.style.bottom = "5px";
+            editIconElement.style.right = "5px";
+            editIconElement.style.width = "30px";
+            editIconElement.style.height = "30px";
+            editIconElement.style.cursor = "pointer";
+            editIconElement.style.zIndex = "1000";
+            parentElement.appendChild(editIconElement);
 
             // Open modal when icon is clicked
-            icon.addEventListener("click", (e) => {
+            editIconElement.addEventListener("click", (e) => {
               e.stopPropagation();
               modal.style.display = "flex";
             });
           }
+
+          // Remove edit icon on blur
+          parentElement.addEventListener("focusout", () => {
+            if (editIconElement) {
+              editIconElement.remove();
+              editIconElement = null;
+            }
+          });
         }
       }
     });
@@ -111,7 +117,6 @@ export default defineContentScript({
       const inputValue = inputText.value.trim();
       if (!inputValue) return;
 
-      // Display user's message
       const userMessageDiv = document.createElement("div");
       userMessageDiv.textContent = inputValue;
       Object.assign(userMessageDiv.style, {
@@ -151,19 +156,13 @@ export default defineContentScript({
         generateBtn.disabled = false;
         generateBtn.innerHTML = `<img src="${regenerateIcon}" alt="Regenerate" style="vertical-align: middle;margin-top:10px">`;
         inputText.value = "";
-        insertBtn.style.display = "inline-block"; // Show the insert button after generation
+        insertBtn.style.display = "inline-block";
       }, 500);
     });
 
     // Insert generated message into the message input area
     insertBtn.addEventListener("click", () => {
       if (lastGeneratedMessage && parentElement) {
-        // Safeguard against null values
-        if (!parentElement) {
-          console.error("Parent element is not available.");
-          return;
-        }
-
         let existingParagraph = parentElement.querySelector("p");
 
         if (!existingParagraph) {
